@@ -1,6 +1,6 @@
-## Arch setup scripts
+## Linux setup scripts
 
-This repository contains post-install automation and config backup scripts for Arch Linux and Kubuntu.
+This repository contains post-install automation and config backup scripts for Linux desktops, currently covering Arch Linux and Kubuntu.
 
 ## Scripts
 

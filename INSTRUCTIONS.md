@@ -1,6 +1,6 @@
 ## AI Agent Instructions
 
-This is a repository containing dotfiles and configuration scripts for my Arch Linux setup. Every Linux shell script created here should be related to that OS. It should contain mainly configuration scripts, including a master one that will run after a clean installation.
+This is a repository containing dotfiles and configuration scripts for my Linux setup. Scripts here may target different Linux distributions and should stay clearly scoped to the platform they support. The repository should mainly contain configuration scripts, including master installers that run after a clean installation.
 
 
 

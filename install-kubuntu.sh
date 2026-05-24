@@ -236,6 +236,30 @@ install_javascript_tooling() {
   fi
 }
 
+install_tailscale() {
+  if command -v tailscale >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! curl -fsSL https://tailscale.com/install.sh | sh; then
+    warn "Failed to install Tailscale"
+  fi
+}
+
+configure_tailscale_systray() {
+  if ! command -v tailscale >/dev/null 2>&1; then
+    warn "Skipping Tailscale systray configuration; tailscale command not found"
+    return 0
+  fi
+
+  tailscale configure systray --enable-startup=systemd ||
+    warn "Failed to configure Tailscale systray startup"
+  systemctl --user daemon-reload ||
+    warn "Failed to reload user systemd units for Tailscale systray"
+  systemctl --user enable --now tailscale-systray ||
+    warn "Failed to enable/start tailscale-systray user service"
+}
+
 install_jetbrains_nerd_font() {
   if fc-list | grep -qi 'JetBrainsMono Nerd Font Mono'; then
     return 0
@@ -396,11 +420,16 @@ main() {
   log "Installing vendor packages..."
   install_google_chrome
   install_1password
+  install_tailscale
   install_nvm
   install_javascript_tooling
 
   log "Ensuring Nerd Font for Powerlevel10k..."
   install_jetbrains_nerd_font
+
+  log "Enabling Tailscale service..."
+  sudo systemctl enable --now tailscaled || warn "Could not enable tailscaled service"
+  configure_tailscale_systray
 
   log "Configuring Zsh and shell prompt..."
   configure_zsh

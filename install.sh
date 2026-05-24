@@ -37,6 +37,22 @@ load_nvm() {
   return 1
 }
 
+configure_tailscale_systray() {
+  echo "Configuring Tailscale systray..."
+
+  if ! command -v tailscale >/dev/null 2>&1; then
+    echo "Skipping Tailscale systray configuration; tailscale command not found."
+    return 0
+  fi
+
+  tailscale configure systray --enable-startup=systemd >/dev/null 2>&1 ||
+    echo "Failed to configure Tailscale systray startup."
+  systemctl --user daemon-reload >/dev/null 2>&1 ||
+    echo "Failed to reload user systemd units for Tailscale systray."
+  systemctl --user enable --now tailscale-systray >/dev/null 2>&1 ||
+    echo "Failed to enable/start tailscale-systray user service."
+}
+
 install_javascript_tooling() {
   echo "Installing Node.js LTS, Bun, Codex, and Claude Code..."
 
@@ -101,7 +117,7 @@ sudo pacman -S --needed --noconfirm power-profiles-daemon >/dev/null 2>&1
 
 # Install Services & Platform Tools
 echo "Installing Services & Platform Tools..."
-sudo pacman -S --needed --noconfirm cronie flatpak docker >/dev/null 2>&1
+sudo pacman -S --needed --noconfirm cronie flatpak docker tailscale >/dev/null 2>&1
 
 # Install Shells & CLI Productivity
 echo "Installing Shells & CLI Productivity..."
@@ -170,6 +186,10 @@ sudo pacman -S --needed --noconfirm \
   ttf-fira-code \
   ttf-jetbrains-mono-nerd \
   ttf-linux-libertine >/dev/null 2>&1
+
+echo "Enabling Tailscale service..."
+sudo systemctl enable --now tailscaled >/dev/null 2>&1 || echo "Failed to enable/start tailscaled."
+configure_tailscale_systray
 yay -S --needed --noconfirm ttf-ms-win11-auto msty-bin >/dev/null 2>&1
 
 # Configure Zsh, Oh My Zsh, and Powerlevel10k
