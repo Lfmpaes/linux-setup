@@ -4,5 +4,8 @@ DefaultProfile=Profile 1.profile
 [General]
 ConfigVersion=1
 
+[MainWindow]
+State[$d]
+
 [UiSettings]
 ColorScheme=

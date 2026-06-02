@@ -11,6 +11,7 @@ What it does:
 - Updates system packages (`pacman -Syu`)
 - Ensures `git` and installs `yay` if missing
 - Installs CLI/dev/media/productivity/gaming/fonts packages from `pacman` and AUR
+- Offers Microsoft Windows fonts (Arial, Times New Roman, etc.) as an optional final install
 - Installs `nvm`, Node.js LTS, Bun, OpenAI Codex, and Claude Code
 - Configures global Git identity:
   - `user.name = Luiz Fernando M. Paes`
@@ -27,6 +28,11 @@ Run:
 
 ### `install-kubuntu.sh` (Kubuntu)
 Installs packages/tools on Kubuntu, configures Zsh and Plasma/Konsole files, sets global Git identity, provisions the JavaScript CLI toolchain, and always logs execution to file.
+
+What it does:
+- Installs apt/snap/flatpak/vendor packages for the desktop setup
+- Configures Zsh, Konsole, Plasma, Git identity, and JavaScript tooling
+- Offers Microsoft Windows fonts (Arial, Times New Roman, etc.) as an optional final install
 
 Options:
 - `-v`, `--verbose`: stream full command output to terminal while still logging

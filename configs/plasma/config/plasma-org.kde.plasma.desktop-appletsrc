@@ -4,28 +4,6 @@ RightButton;NoModifier=org.kde.contextmenu
 [ActionPlugins][1]
 RightButton;NoModifier=org.kde.contextmenu
 
-[Containments][1]
-ItemGeometries-1920x1200=
-ItemGeometriesHorizontal=
-activityId=240e519a-b87e-4d2c-aa04-9076f9f9afdc
-formfactor=0
-immutability=1
-lastScreen=0
-location=0
-plugin=org.kde.plasma.folder
-wallpaperplugin=org.kde.image
-
-[Containments][1][ConfigDialog]
-DialogHeight=725
-DialogWidth=916
-
-[Containments][1][General]
-positions={"1920x1200":[]}
-
-[Containments][1][Wallpaper][org.kde.image][General]
-Image=/home/lfmpaes/Pictures/Wallpapers/small-memory-lp-1920x1200.jpg
-SlidePaths=/usr/share/wallpapers/
-
 [Containments][2]
 activityId=
 formfactor=2
@@ -40,8 +18,7 @@ immutability=1
 plugin=org.kde.plasma.digitalclock
 
 [Containments][2][Applets][20][Configuration]
-PreloadWeight=100
-popupHeight=450
+popupHeight=451
 popupWidth=560
 
 [Containments][2][Applets][20][Configuration][Appearance]
@@ -60,8 +37,7 @@ immutability=1
 plugin=org.kde.plasma.kickoff
 
 [Containments][2][Applets][3][Configuration]
-PreloadWeight=100
-popupHeight=508
+popupHeight=509
 popupWidth=665
 
 [Containments][2][Applets][3][Configuration][ConfigDialog]
@@ -72,7 +48,7 @@ DialogWidth=720
 applicationsDisplay=0
 favoritesPortedToKAstats=true
 highlightNewlyInstalledApps=false
-icon=/usr/share/pixmaps/archlinux-logo.svg
+icon=start-here-kubuntu
 systemFavorites=suspend\\,hibernate\\,reboot\\,shutdown
 
 [Containments][2][Applets][4]
@@ -88,7 +64,7 @@ DialogHeight=540
 DialogWidth=720
 
 [Containments][2][Applets][5][Configuration][General]
-launchers=applications:zen.desktop,preferred://filemanager
+launchers=applications:google-chrome.desktop,preferred://filemanager
 
 [Containments][2][Applets][6]
 immutability=1
@@ -109,9 +85,6 @@ wallpaperplugin=org.kde.image
 immutability=1
 plugin=org.kde.plasma.devicenotifier
 
-[Containments][2][Applets][7][Applets][10][Configuration]
-PreloadWeight=65
-
 [Containments][2][Applets][7][Applets][11]
 immutability=1
 plugin=org.kde.plasma.manage-inputmethod
@@ -119,9 +92,6 @@ plugin=org.kde.plasma.manage-inputmethod
 [Containments][2][Applets][7][Applets][12]
 immutability=1
 plugin=org.kde.plasma.notifications
-
-[Containments][2][Applets][7][Applets][12][Configuration]
-PreloadWeight=55
 
 [Containments][2][Applets][7][Applets][13]
 immutability=1
@@ -151,39 +121,32 @@ plugin=org.kde.kscreen
 immutability=1
 plugin=org.kde.plasma.volume
 
-[Containments][2][Applets][7][Applets][19][Configuration]
-PreloadWeight=100
-
 [Containments][2][Applets][7][Applets][19][Configuration][General]
 migrated=true
 
 [Containments][2][Applets][7][Applets][22]
 immutability=1
-plugin=org.kde.plasma.battery
-
-[Containments][2][Applets][7][Applets][22][Configuration]
-PreloadWeight=0
+plugin=org.kde.kdeconnect
 
 [Containments][2][Applets][7][Applets][23]
 immutability=1
 plugin=org.kde.plasma.brightness
 
-[Containments][2][Applets][7][Applets][23][Configuration]
-PreloadWeight=0
-
 [Containments][2][Applets][7][Applets][24]
 immutability=1
 plugin=org.kde.plasma.networkmanagement
-
-[Containments][2][Applets][7][Applets][24][Configuration]
-PreloadWeight=100
 
 [Containments][2][Applets][7][Applets][25]
 immutability=1
 plugin=org.kde.plasma.mediacontroller
 
-[Containments][2][Applets][7][Applets][25][Configuration]
-PreloadWeight=0
+[Containments][2][Applets][7][Applets][27]
+immutability=1
+plugin=org.kde.plasma.bluetooth
+
+[Containments][2][Applets][7][Applets][28]
+immutability=1
+plugin=org.kde.plasma.battery
 
 [Containments][2][Applets][7][Applets][8]
 immutability=1
@@ -193,37 +156,39 @@ plugin=org.kde.plasma.cameraindicator
 immutability=1
 plugin=org.kde.plasma.clipboard
 
-[Containments][2][Applets][7][Applets][9][Configuration]
-PreloadWeight=55
-
 [Containments][2][Applets][7][ConfigDialog]
 DialogHeight=540
 DialogWidth=720
 
 [Containments][2][Applets][7][General]
-extraItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.manage-inputmethod,org.kde.plasma.notifications,org.kde.plasma.keyboardindicator,org.kde.plasma.weather,org.kde.plasma.brightness,org.kde.plasma.keyboardlayout,org.kde.plasma.networkmanagement,org.kde.plasma.vault,org.kde.plasma.printmanager,org.kde.plasma.mediacontroller,org.kde.kscreen,org.kde.plasma.volume,org.kde.plasma.battery
+extraItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.manage-inputmethod,org.kde.plasma.notifications,org.kde.plasma.keyboardindicator,org.kde.plasma.weather,org.kde.plasma.brightness,org.kde.plasma.keyboardlayout,org.kde.plasma.networkmanagement,org.kde.plasma.vault,org.kde.plasma.printmanager,org.kde.plasma.mediacontroller,org.kde.kscreen,org.kde.plasma.volume,org.kde.plasma.battery,org.kde.kdeconnect,org.kde.kupapplet
 hiddenItems=chrome_status_icon_1
-knownItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.manage-inputmethod,org.kde.plasma.notifications,org.kde.plasma.keyboardindicator,org.kde.plasma.weather,org.kde.plasma.battery,org.kde.plasma.brightness,org.kde.plasma.keyboardlayout,org.kde.plasma.networkmanagement,org.kde.plasma.vault,org.kde.plasma.printmanager,org.kde.plasma.mediacontroller,org.kde.kscreen,org.kde.plasma.volume
+knownItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.manage-inputmethod,org.kde.plasma.notifications,org.kde.plasma.keyboardindicator,org.kde.plasma.weather,org.kde.plasma.battery,org.kde.plasma.brightness,org.kde.plasma.keyboardlayout,org.kde.plasma.networkmanagement,org.kde.plasma.vault,org.kde.plasma.printmanager,org.kde.plasma.mediacontroller,org.kde.kscreen,org.kde.plasma.volume,org.kde.kdeconnect,org.kde.kupapplet
 shownItems=org.kde.plasma.battery
 
 [Containments][2][General]
 AppletOrder=3;5;4;6;7;20;21
 
-[Containments][25]
-activityId=240e519a-b87e-4d2c-aa04-9076f9f9afdc
+[Containments][26]
+ItemGeometries-1920x1200=
+ItemGeometriesHorizontal=
+activityId=31cd473c-799c-4d79-9531-6f82915461b8
 formfactor=0
 immutability=1
-lastScreen=1
+lastScreen=0
 location=0
 plugin=org.kde.plasma.folder
 wallpaperplugin=org.kde.image
 
-[Containments][25][General]
-positions={"1920x1080":[]}
+[Containments][26][ConfigDialog]
+DialogHeight=630
+DialogWidth=810
 
-[Containments][25][Wallpaper][org.kde.image][General]
-Image=/home/lfmpaes/Pictures/Wallpapers/sunrise-landscape-minimalism-5k-ex-1920x1200.jpg
-SlidePaths=/home/lfmpaes/.local/share/wallpapers/,/usr/share/wallpapers/
+[Containments][26][General]
+positions={"1920x1200":[]}
+
+[Containments][26][Wallpaper][org.kde.image][General]
+Image=/home/lfmpaes/linux-setup/configs/plasma/wallpapers/Pictures/Wallpapers/small-memory-lp-1920x1200.jpg
 
 [ScreenMapping]
 itemsOnDisabledScreens=

@@ -40,11 +40,19 @@ for src in "${!FILE_BACKUPS[@]}"; do
   fi
 done
 
-# Capture all wallpapers referenced by Plasma configuration
-PLASMA_APPLETSRC="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 WALLPAPER_DEST_BASE="$SCRIPT_DIR/configs/plasma/wallpapers"
-if [[ -f "$PLASMA_APPLETSRC" ]]; then
-  declare -A COPIED_WALLPAPERS=()
+declare -A COPIED_WALLPAPERS=()
+wallpaper_sources=(
+  "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  "$HOME/.config/kscreenlockerrc"
+)
+
+for wallpaper_source in "${wallpaper_sources[@]}"; do
+  if [[ ! -f "$wallpaper_source" ]]; then
+    warn_missing "$wallpaper_source"
+    continue
+  fi
+
   while IFS= read -r wallpaper_path; do
     [[ -z "$wallpaper_path" ]] && continue
     wallpaper_path="${wallpaper_path#file://}"
@@ -68,9 +76,7 @@ if [[ -f "$PLASMA_APPLETSRC" ]]; then
     rel_dest="${dest#$SCRIPT_DIR/}"
     log "Saved ${rel_dest}"
     COPIED_WALLPAPERS["$wallpaper_path"]=1
-  done < <(sed -nE 's/^Image(\[[^]]*\])?=//p' "$PLASMA_APPLETSRC" | sort -u)
-else
-  warn_missing "$PLASMA_APPLETSRC"
-fi
+  done < <(sed -nE 's/^(Image|PreviewImage)(\[[^]]*\])?=//p' "$wallpaper_source" | sort -u)
+done
 
 log "Backup complete."
