@@ -294,6 +294,21 @@ install_javascript_tooling() {
   fi
 }
 
+install_smoked_salmon() {
+  if command -v salmon >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! command -v uv >/dev/null 2>&1; then
+    warn "Skipping Smoked Salmon install because uv was not found"
+    return 0
+  fi
+
+  if ! uv tool install --force "git+https://github.com/smokin-salmon/smoked-salmon"; then
+    warn "Failed to install Smoked Salmon"
+  fi
+}
+
 install_node_lts_with_nvm() {
   log "Installing Node.js LTS via nvm..."
 
@@ -452,6 +467,14 @@ configure_git_identity() {
   git config --global user.email "luiz@lfmpaes.com.br"
 }
 
+install_smoked_salmon_config() {
+  local source="$SCRIPT_DIR/configs/smoked-salmon/config.toml"
+  local target="$HOME/.config/smoked-salmon/config.toml"
+
+  [ -f "$source" ] || return 0
+  install -Dm644 "$source" "$target"
+}
+
 copy_tree_to() {
   local source_base="$1"
   local target_base="$2"
@@ -598,9 +621,11 @@ run_arch_install() {
   yay -S --needed --noconfirm visual-studio-code-bin cursor-bin
   install_node_lts_with_nvm
   install_javascript_tooling
+  install_smoked_salmon
 
   log "Configuring Git identity..."
   configure_git_identity
+  install_smoked_salmon_config
 
   log "Installing networking and sharing tools..."
   sudo pacman -S --needed --noconfirm qbittorrent
@@ -728,6 +753,7 @@ run_ubuntu_install() {
   install_tailscale_deb
   install_nvm_if_needed
   install_javascript_tooling
+  install_smoked_salmon
 
   log "Ensuring Nerd Font for Powerlevel10k..."
   install_jetbrains_nerd_font
@@ -741,6 +767,7 @@ run_ubuntu_install() {
 
   log "Configuring Git identity..."
   configure_git_identity
+  install_smoked_salmon_config
 
   apply_kde_configs
   install_optional_windows_fonts_ubuntu

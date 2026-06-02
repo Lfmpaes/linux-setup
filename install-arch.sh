@@ -68,6 +68,29 @@ install_javascript_tooling() {
   fi
 }
 
+install_smoked_salmon_config() {
+  local source="$SCRIPT_DIR/configs/smoked-salmon/config.toml"
+  local target="$HOME/.config/smoked-salmon/config.toml"
+
+  [ -f "$source" ] || return 0
+  install -Dm644 "$source" "$target"
+}
+
+install_smoked_salmon() {
+  if command -v salmon >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "Skipping Smoked Salmon install because uv was not found."
+    return 0
+  fi
+
+  if ! uv tool install --force "git+https://github.com/smokin-salmon/smoked-salmon" >/dev/null 2>&1; then
+    echo "Failed to install Smoked Salmon."
+  fi
+}
+
 configure_tailscale_systray() {
   echo "Configuring Tailscale systray..."
 
@@ -239,11 +262,13 @@ sudo pacman -S --needed --noconfirm \
 yay -S --needed --noconfirm visual-studio-code-bin cursor-bin >/dev/null 2>&1
 
 install_javascript_tooling
+install_smoked_salmon
 
 # Configure global Git identity
 echo "Configuring Git identity..."
 git config --global user.name "Luiz Fernando M. Paes"
 git config --global user.email "luiz@lfmpaes.com.br"
+install_smoked_salmon_config
 
 # Install Networking & Sharing
 echo "Installing Networking & Sharing..."

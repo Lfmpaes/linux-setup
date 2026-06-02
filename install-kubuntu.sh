@@ -258,6 +258,21 @@ install_javascript_tooling() {
   fi
 }
 
+install_smoked_salmon() {
+  if command -v salmon >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! command -v uv >/dev/null 2>&1; then
+    warn "Skipping Smoked Salmon install because uv was not found"
+    return 0
+  fi
+
+  if ! uv tool install --force "git+https://github.com/smokin-salmon/smoked-salmon"; then
+    warn "Failed to install Smoked Salmon"
+  fi
+}
+
 install_node_lts_with_nvm() {
   log "Installing Node.js LTS via nvm..."
 
@@ -370,6 +385,14 @@ configure_zsh() {
 configure_git_identity() {
   git config --global user.name "Luiz Fernando M. Paes"
   git config --global user.email "luiz@lfmpaes.com.br"
+}
+
+install_smoked_salmon_config() {
+  local source="$SCRIPT_DIR/configs/smoked-salmon/config.toml"
+  local target="$HOME/.config/smoked-salmon/config.toml"
+
+  [ -f "$source" ] || return 0
+  install -Dm644 "$source" "$target"
 }
 
 copy_tree_to() {
@@ -523,6 +546,7 @@ main() {
   install_nvm
   install_node_lts_with_nvm
   install_javascript_tooling
+  install_smoked_salmon
 
   log "Ensuring Nerd Font for Powerlevel10k..."
   install_jetbrains_nerd_font
@@ -536,6 +560,7 @@ main() {
 
   log "Configuring Git identity..."
   configure_git_identity
+  install_smoked_salmon_config
 
   log "Applying Konsole and Plasma configs from repository..."
   copy_tree_to "$SCRIPT_DIR/configs/konsole/config" "$HOME/.config"

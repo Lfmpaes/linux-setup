@@ -13,6 +13,7 @@ declare -A FILE_BACKUPS=(
   ["$HOME/.config/konsolerc"]="$SCRIPT_DIR/configs/konsole/config/konsolerc"
   ["$HOME/.config/konsolesshconfig"]="$SCRIPT_DIR/configs/konsole/config/konsolesshconfig"
   ["$HOME/.local/share/konsole/Profile 1.profile"]="$SCRIPT_DIR/configs/konsole/profiles/Profile 1.profile"
+  ["$HOME/.config/smoked-salmon/config.toml"]="$SCRIPT_DIR/configs/smoked-salmon/config.toml"
   ["$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"]="$SCRIPT_DIR/configs/plasma/config/plasma-org.kde.plasma.desktop-appletsrc"
   ["$HOME/.config/plasmashellrc"]="$SCRIPT_DIR/configs/plasma/config/plasmashellrc"
   ["$HOME/.config/kdeglobals"]="$SCRIPT_DIR/configs/plasma/config/kdeglobals"
