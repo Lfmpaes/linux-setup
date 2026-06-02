@@ -192,4 +192,4 @@ Image=/home/lfmpaes/linux-setup/configs/plasma/wallpapers/Pictures/Wallpapers/sm
 
 [ScreenMapping]
 itemsOnDisabledScreens=
-screenMapping=
+screenMapping=desktop:/steam.desktop,0,31cd473c-799c-4d79-9531-6f82915461b8

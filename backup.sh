@@ -75,6 +75,10 @@ for wallpaper_source in "${wallpaper_sources[@]}"; do
       rel_path="external/$(basename "$wallpaper_path")"
     fi
     dest="$WALLPAPER_DEST_BASE/$rel_path"
+    if [[ "$wallpaper_path" == "$dest" ]]; then
+      COPIED_WALLPAPERS["$wallpaper_path"]=1
+      continue
+    fi
     mkdir -p "$(dirname "$dest")"
     cp -f "$wallpaper_path" "$dest"
     rel_dest="${dest#$SCRIPT_DIR/}"
