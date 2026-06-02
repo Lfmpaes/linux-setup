@@ -47,10 +47,8 @@
 - zen-browser-bin [AUR]
 
 ## Media, Streaming & Creative Apps
-- gimp
 - mpv
 - spotify [AUR]
-- spotify-player
 - cider [AUR]
 
 ## Productivity, Security & Utilities
@@ -66,5 +64,4 @@
 - ttf-fira-code
 - ttf-jetbrains-mono-nerd
 - ttf-linux-libertine
-- ttf-ms-win11-auto [AUR]
-- msty-bin [AUR]
+- Optional at end: ttf-ms-win11-auto [AUR]

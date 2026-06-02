@@ -5,21 +5,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VERBOSE=0
 LOG_FILE=""
 
-print_banner() {
-  printf '\033c' >&3
-  sleep 0.5
-  cat >&3 <<'BANNER'
-.__   _____                __                 __          
-|  |_/ ____\_____   ____ |  | ____ __  _____/  |_ __ __ 
-|  |\   __\\__  \_/ ___\|  |/ /  |  \/    \   __\  |  \
-|  |_|  |   / __ \\  \___|    <|  |  /   |  \  | |  |  /
-|____/__|  (____  /\___  >__|_ \____/|___|  /__| |____/ 
-                \/     \/     \/          \/            
-
-                  lfm-kubuntu-setup
-BANNER
-}
-
 usage() {
   cat <<'EOF'
 Usage: ./install-kubuntu.sh [options]
@@ -80,6 +65,26 @@ warn() {
   if [ "$VERBOSE" -eq 0 ]; then
     printf 'WARNING: %s\n' "$*" >&4
   fi
+}
+
+prompt_yes_no() {
+  local prompt="$1"
+  local default="${2:-N}"
+  local reply
+
+  if [ ! -t 0 ]; then
+    case "$default" in
+      [Yy]*) return 0 ;;
+      *) return 1 ;;
+    esac
+  fi
+
+  printf '%s [y/N] ' "$prompt" >&3
+  read -r reply
+  case "$reply" in
+    [Yy]|[Yy][Ee][Ss]) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 ensure_cmd() {
@@ -152,6 +157,31 @@ install_google_chrome() {
   rm -f "$tmp_deb"
 }
 
+configure_google_chrome_launchers() {
+  local chrome_flags desktop_id source target
+
+  chrome_flags="--disable-features=ExtensionManifestV2Unsupported,ExtensionManifestV2Disabled --password-store=basic"
+
+  mkdir -p "$HOME/.local/share/applications"
+
+  for desktop_id in google-chrome.desktop com.google.Chrome.desktop; do
+    source="/usr/share/applications/$desktop_id"
+    target="$HOME/.local/share/applications/$desktop_id"
+
+    if [ ! -f "$source" ]; then
+      warn "Skipping Chrome launcher override for $desktop_id; source desktop file not found"
+      continue
+    fi
+
+    install -Dm644 "$source" "$target"
+    sed -i \
+      -e "s#^Exec=/usr/bin/google-chrome-stable %U#Exec=/usr/bin/google-chrome-stable ${chrome_flags} %U#" \
+      -e "s#^Exec=/usr/bin/google-chrome-stable\$#Exec=/usr/bin/google-chrome-stable ${chrome_flags}#" \
+      -e "s#^Exec=/usr/bin/google-chrome-stable --incognito#Exec=/usr/bin/google-chrome-stable ${chrome_flags} --incognito#" \
+      "$target"
+  done
+}
+
 install_1password() {
   if command -v 1password >/dev/null 2>&1 || command -v op >/dev/null 2>&1; then
     return 0
@@ -217,6 +247,25 @@ install_javascript_tooling() {
     return 0
   fi
 
+  if ! curl -fsSL https://bun.com/install | bash; then
+    warn "Failed to install Bun"
+  fi
+
+  export PATH="$HOME/.bun/bin:$PATH"
+
+  if ! npm install -g @openai/codex; then
+    warn "Failed to install Codex"
+  fi
+}
+
+install_node_lts_with_nvm() {
+  log "Installing Node.js LTS via nvm..."
+
+  if ! load_nvm; then
+    warn "Skipping Node.js LTS install because nvm could not be loaded"
+    return 0
+  fi
+
   if ! nvm install --lts; then
     warn "Failed to install Node.js LTS with nvm"
     return 0
@@ -224,16 +273,6 @@ install_javascript_tooling() {
 
   nvm alias default 'lts/*' || true
   nvm use --lts || true
-
-  if ! curl -fsSL https://bun.com/install | bash; then
-    warn "Failed to install Bun"
-  fi
-
-  export PATH="$HOME/.bun/bin:$PATH"
-
-  if ! npm install -g @openai/codex @anthropic-ai/claude-code; then
-    warn "Failed to install Codex and/or Claude Code"
-  fi
 }
 
 install_tailscale() {
@@ -288,6 +327,30 @@ install_jetbrains_nerd_font() {
   fc-cache -f "$font_dir" || warn "Failed to refresh font cache for $font_dir"
 }
 
+install_optional_windows_fonts() {
+  log "Optional installs:"
+  if prompt_yes_no "Install Microsoft Windows fonts (Arial, Times New Roman, etc.) for LibreOffice compatibility?"; then
+    if fc-list | grep -qi 'Arial'; then
+      log "Microsoft Windows fonts are already installed."
+      return 0
+    fi
+
+    if [ ! -t 0 ]; then
+      warn "Microsoft Windows fonts require interactive EULA acceptance; rerun this step in a terminal."
+      return 0
+    fi
+
+    log "Installing Microsoft Windows fonts..."
+    if ! sudo apt-get install --reinstall ttf-mscorefonts-installer; then
+      warn "Failed to install Microsoft Windows fonts"
+      return 0
+    fi
+    fc-cache -f || warn "Failed to refresh font cache"
+  else
+    log "Skipping Microsoft Windows fonts."
+  fi
+}
+
 configure_zsh() {
   local oh_my_zsh_dir="$HOME/.oh-my-zsh"
   local p10k_dir="$HOME/powerlevel10k"
@@ -322,6 +385,44 @@ copy_tree_to() {
   done < <(find "$source_base" -type f -print0)
 }
 
+copy_wallpapers_to() {
+  local source_base="$1"
+  local target_base="$2"
+  local file rel_path
+
+  [ -d "$source_base" ] || return 0
+
+  while IFS= read -r -d '' file; do
+    rel_path="${file#${source_base}/}"
+    rel_path="${rel_path#Pictures/Wallpapers/}"
+    install -Dm644 "$file" "$target_base/$rel_path"
+  done < <(find "$source_base" -type f -print0)
+}
+
+rewrite_plasma_paths() {
+  local file="$1"
+
+  [ -f "$file" ] || return 0
+
+  sed -E -i \
+    -e "s#/home/[^/]+/Pictures/Wallpapers/#$HOME/Pictures/Wallpapers/#g" \
+    -e "s#/home/[^/]+/\\.local/share/wallpapers/#$HOME/.local/share/wallpapers/#g" \
+    "$file"
+}
+
+warn_missing_wallpapers() {
+  local file="$1"
+  local wallpaper_path
+
+  [ -f "$file" ] || return 0
+
+  while IFS= read -r wallpaper_path; do
+    [ -n "$wallpaper_path" ] || continue
+    wallpaper_path="${wallpaper_path#file://}"
+    [ -f "$wallpaper_path" ] || warn "Wallpaper asset referenced by $(basename "$file") is missing: $wallpaper_path"
+  done < <(sed -nE 's/^(Image|PreviewImage)(\[[^]]*\])?=//p' "$file" | sort -u)
+}
+
 restart_plasma_shell() {
   if ! command -v plasmashell >/dev/null 2>&1; then
     return 0
@@ -339,7 +440,6 @@ restart_plasma_shell() {
 main() {
   parse_args "$@"
   setup_logging
-  print_banner
   log "Logging to: $LOG_FILE"
 
   ensure_cmd sudo
@@ -386,15 +486,13 @@ main() {
     golang-go \
     python3-pip \
     qbittorrent \
-    gimp \
     mpv \
     steam-installer \
     fonts-noto-cjk \
     fonts-dejavu \
     fonts-firacode \
     fonts-jetbrains-mono \
-    fonts-linuxlibertine \
-    ttf-mscorefonts-installer
+    fonts-linuxlibertine
 
   log "Enabling Docker service..."
   sudo systemctl enable --now docker || warn "Could not enable docker service"
@@ -419,9 +517,11 @@ main() {
 
   log "Installing vendor packages..."
   install_google_chrome
+  configure_google_chrome_launchers
   install_1password
   install_tailscale
   install_nvm
+  install_node_lts_with_nvm
   install_javascript_tooling
 
   log "Ensuring Nerd Font for Powerlevel10k..."
@@ -441,7 +541,13 @@ main() {
   copy_tree_to "$SCRIPT_DIR/configs/konsole/config" "$HOME/.config"
   copy_tree_to "$SCRIPT_DIR/configs/konsole/profiles" "$HOME/.local/share/konsole"
   copy_tree_to "$SCRIPT_DIR/configs/plasma/config" "$HOME/.config"
-  copy_tree_to "$SCRIPT_DIR/configs/plasma/wallpapers" "$HOME/Pictures/Wallpapers"
+  copy_wallpapers_to "$SCRIPT_DIR/configs/plasma/wallpapers" "$HOME/Pictures/Wallpapers"
+  rewrite_plasma_paths "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  rewrite_plasma_paths "$HOME/.config/kscreenlockerrc"
+  warn_missing_wallpapers "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  warn_missing_wallpapers "$HOME/.config/kscreenlockerrc"
+
+  install_optional_windows_fonts
 
   restart_plasma_shell
 
