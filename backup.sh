@@ -65,8 +65,11 @@ for wallpaper_source in "${wallpaper_sources[@]}"; do
       continue
     fi
 
-    if [[ "$wallpaper_path" == "$HOME/"* ]]; then
-      rel_path="${wallpaper_path#"$HOME/"}"
+    if [[ "$wallpaper_path" == *"/Pictures/Wallpapers/"* ]]; then
+      rel_path="${wallpaper_path#*\/Pictures\/Wallpapers\/}"
+      rel_path="Pictures/Wallpapers/$rel_path"
+    elif [[ "$wallpaper_path" == "$HOME/"* ]]; then
+      rel_path="Pictures/Wallpapers/$(basename "$wallpaper_path")"
     else
       rel_path="external/$(basename "$wallpaper_path")"
     fi
