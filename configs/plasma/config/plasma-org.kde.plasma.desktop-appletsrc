@@ -9,7 +9,7 @@ activityId=
 formfactor=2
 immutability=1
 lastScreen=0
-location=4
+location=3
 plugin=org.kde.panel
 wallpaperplugin=org.kde.image
 
@@ -27,10 +27,6 @@ fontWeight=400
 [Containments][2][Applets][20][Configuration][ConfigDialog]
 DialogHeight=540
 DialogWidth=720
-
-[Containments][2][Applets][21]
-immutability=1
-plugin=org.kde.plasma.showdesktop
 
 [Containments][2][Applets][3]
 immutability=1
@@ -167,7 +163,7 @@ knownItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasm
 shownItems=org.kde.plasma.battery
 
 [Containments][2][General]
-AppletOrder=3;5;4;6;7;20;21
+AppletOrder=3;5;4;6;7;20
 
 [Containments][27]
 ItemGeometries-1920x1200=
