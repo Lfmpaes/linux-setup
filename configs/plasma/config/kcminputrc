@@ -1,0 +1,9 @@
+[Libinput][10248][534][ASUF1202:00 2808:0216 Touchpad]
+NaturalScroll=true
+ScrollFactor=0.75
+
+[Libinput][1133][16514][Logitech MX Master 3]
+NaturalScroll=false
+
+[Mouse]
+cursorTheme=capitaine-cursors

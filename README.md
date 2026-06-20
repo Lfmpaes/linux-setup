@@ -55,12 +55,14 @@ Logs:
 - Latest symlink: `logs/install-kubuntu-latest.log`
 
 ### `backup.sh`
-Backs up user config files from `$HOME` into the repository under `configs/`.
+Backs up public-safe user configuration from `$HOME` into the repository under `configs/`.
 
 What it does:
-- Copies Zsh, Kitty, Konsole, and Plasma config files into this repo
+- Copies Bash, Zsh, Micro, Kate, Kitty, Konsole, GTK, and selected Plasma/KDE config files into this repo
+- Copies desktop autostart entries and user launcher/default-application overrides
 - Copies KDE display layout state from `~/.local/share/kscreen`
 - Parses Plasma wallpaper entries and copies referenced wallpapers into `configs/plasma/wallpapers/`
+- Does not copy VS Code, browser, account, credential, network, or other private application state
 - Warns for files that are missing and continues
 
 Run:

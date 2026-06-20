@@ -384,6 +384,7 @@ install_optional_windows_fonts() {
 configure_zsh() {
   local oh_my_zsh_dir="$HOME/.oh-my-zsh"
   local p10k_dir="$HOME/powerlevel10k"
+  local current_shell zsh_path
 
   if [ ! -d "$oh_my_zsh_dir" ]; then
     git clone https://github.com/ohmyzsh/ohmyzsh.git "$oh_my_zsh_dir" || warn "Failed to clone oh-my-zsh"
@@ -395,6 +396,16 @@ configure_zsh() {
 
   install -Dm644 "$SCRIPT_DIR/configs/zsh/.zshrc" "$HOME/.zshrc"
   install -Dm644 "$SCRIPT_DIR/configs/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+
+  zsh_path="$(command -v zsh)"
+  current_shell="$(getent passwd "$USER" | awk -F: '{print $7}')"
+  if [ "$current_shell" = "$zsh_path" ]; then
+    log "Zsh is already the default shell."
+  elif sudo chsh -s "$zsh_path" "$USER"; then
+    log "Set Zsh as the default shell. Log out and back in for the change to take effect."
+  else
+    warn "Could not set Zsh as the default shell"
+  fi
 }
 
 configure_git_identity() {
@@ -624,7 +635,15 @@ main() {
   log "Configuring Git identity..."
   configure_git_identity
 
-  log "Applying Kitty, Konsole, and Plasma configs from repository..."
+  log "Applying shell, editor, desktop, and Plasma configs from repository..."
+  [ ! -f "$SCRIPT_DIR/configs/bash/.bashrc" ] || install -Dm644 "$SCRIPT_DIR/configs/bash/.bashrc" "$HOME/.bashrc"
+  [ ! -f "$SCRIPT_DIR/configs/bash/.bash_profile" ] || install -Dm644 "$SCRIPT_DIR/configs/bash/.bash_profile" "$HOME/.bash_profile"
+  copy_tree_to "$SCRIPT_DIR/configs/micro" "$HOME/.config/micro"
+  copy_tree_to "$SCRIPT_DIR/configs/kate/externaltools" "$HOME/.config/kate/externaltools"
+  copy_tree_to "$SCRIPT_DIR/configs/desktop/autostart" "$HOME/.config/autostart"
+  copy_tree_to "$SCRIPT_DIR/configs/desktop/gtk-3.0" "$HOME/.config/gtk-3.0"
+  copy_tree_to "$SCRIPT_DIR/configs/desktop/gtk-4.0" "$HOME/.config/gtk-4.0"
+  copy_tree_to "$SCRIPT_DIR/configs/desktop/applications" "$HOME/.local/share/applications"
   copy_tree_to "$SCRIPT_DIR/configs/kitty" "$HOME/.config/kitty"
   copy_tree_to "$SCRIPT_DIR/configs/konsole/config" "$HOME/.config"
   copy_tree_to "$SCRIPT_DIR/configs/konsole/profiles" "$HOME/.local/share/konsole"

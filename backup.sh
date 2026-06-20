@@ -8,6 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Map of source file -> destination file inside the repo.
 declare -A FILE_BACKUPS=(
+  ["$HOME/.bashrc"]="$SCRIPT_DIR/configs/bash/.bashrc"
+  ["$HOME/.bash_profile"]="$SCRIPT_DIR/configs/bash/.bash_profile"
   ["$HOME/.zshrc"]="$SCRIPT_DIR/configs/zsh/.zshrc"
   ["$HOME/.p10k.zsh"]="$SCRIPT_DIR/configs/zsh/.p10k.zsh"
   ["$HOME/.config/konsolerc"]="$SCRIPT_DIR/configs/konsole/config/konsolerc"
@@ -19,6 +21,15 @@ declare -A FILE_BACKUPS=(
   ["$HOME/.config/kdeglobals"]="$SCRIPT_DIR/configs/plasma/config/kdeglobals"
   ["$HOME/.config/kscreenlockerrc"]="$SCRIPT_DIR/configs/plasma/config/kscreenlockerrc"
   ["$HOME/.config/kglobalshortcutsrc"]="$SCRIPT_DIR/configs/plasma/config/kglobalshortcutsrc"
+  ["$HOME/.config/kwinrc"]="$SCRIPT_DIR/configs/plasma/config/kwinrc"
+  ["$HOME/.config/dolphinrc"]="$SCRIPT_DIR/configs/plasma/config/dolphinrc"
+  ["$HOME/.config/katerc"]="$SCRIPT_DIR/configs/plasma/config/katerc"
+  ["$HOME/.config/kcminputrc"]="$SCRIPT_DIR/configs/plasma/config/kcminputrc"
+  ["$HOME/.config/krunnerrc"]="$SCRIPT_DIR/configs/plasma/config/krunnerrc"
+  ["$HOME/.config/spectaclerc"]="$SCRIPT_DIR/configs/plasma/config/spectaclerc"
+  ["$HOME/.config/khotkeysrc"]="$SCRIPT_DIR/configs/plasma/config/khotkeysrc"
+  ["$HOME/.config/micro/settings.json"]="$SCRIPT_DIR/configs/micro/settings.json"
+  ["$HOME/.config/micro/bindings.json"]="$SCRIPT_DIR/configs/micro/bindings.json"
 )
 
 copy_tree_backup() {
@@ -61,6 +72,12 @@ done
 
 copy_tree_backup "$HOME/.config/kitty" "$SCRIPT_DIR/configs/kitty"
 copy_tree_backup "$HOME/.local/share/kscreen" "$SCRIPT_DIR/configs/plasma/kscreen"
+copy_tree_backup "$HOME/.config/micro/colorschemes" "$SCRIPT_DIR/configs/micro/colorschemes"
+copy_tree_backup "$HOME/.config/kate/externaltools" "$SCRIPT_DIR/configs/kate/externaltools"
+copy_tree_backup "$HOME/.config/autostart" "$SCRIPT_DIR/configs/desktop/autostart"
+copy_tree_backup "$HOME/.config/gtk-3.0" "$SCRIPT_DIR/configs/desktop/gtk-3.0"
+copy_tree_backup "$HOME/.config/gtk-4.0" "$SCRIPT_DIR/configs/desktop/gtk-4.0"
+copy_tree_backup "$HOME/.local/share/applications" "$SCRIPT_DIR/configs/desktop/applications"
 
 WALLPAPER_DEST_BASE="$SCRIPT_DIR/configs/plasma/wallpapers"
 declare -A COPIED_WALLPAPERS=()

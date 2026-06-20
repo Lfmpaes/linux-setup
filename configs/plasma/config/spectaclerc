@@ -1,0 +1,12 @@
+[General]
+ocrLanguages=afr
+
+[ImageSave]
+lastImageSaveLocation=file:///home/lfmpaes/Pictures/Screenshots/Screenshot_20260604_091708.png
+translatedScreenshotsFolder=Screenshots
+
+[VideoSave]
+translatedScreencastsFolder=Screencasts
+
+[ViewerWindow]
+1920x1200 screen: Window-Maximized=true
