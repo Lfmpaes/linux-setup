@@ -3,5 +3,5 @@ Autolock=false
 Timeout=0
 
 [Greeter][Wallpaper][org.kde.image][General]
-Image=/home/lfmpaes/linux-setup/configs/plasma/wallpapers/Pictures/Wallpapers/sunrise-landscape-minimalism-5k-ex-1920x1200.jpg
-PreviewImage=/home/lfmpaes/linux-setup/configs/plasma/wallpapers/Pictures/Wallpapers/sunrise-landscape-minimalism-5k-ex-1920x1200.jpg
+Image=/home/lfmpaes/Pictures/Wallpapers/sunrise-landscape-minimalism-5k-ex-1920x1200.jpg
+PreviewImage=/home/lfmpaes/Pictures/Wallpapers/sunrise-landscape-minimalism-5k-ex-1920x1200.jpg

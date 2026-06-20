@@ -299,12 +299,26 @@ install_smoked_salmon() {
     return 0
   fi
 
+  log "Installing Smoked Salmon dependencies..."
+  case "$DISTRO_FAMILY" in
+    arch)
+      sudo pacman -S --needed --noconfirm sox flac mp3val lame curl git || warn "Failed to install Smoked Salmon dependencies"
+      ;;
+    ubuntu)
+      install_apt_packages sox flac mp3val lame curl git
+      ;;
+  esac
+
   if ! command -v uv >/dev/null 2>&1; then
-    warn "Skipping Smoked Salmon install because uv was not found"
-    return 0
+    log "uv not found; installing uv for Smoked Salmon..."
+    if ! curl -fsSL https://astral.sh/uv/install.sh | sh; then
+      warn "Failed to install uv"
+      return 0
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
   fi
 
-  if ! uv tool install --force "git+https://github.com/smokin-salmon/smoked-salmon"; then
+  if ! uv tool install git+https://github.com/smokin-salmon/smoked-salmon; then
     warn "Failed to install Smoked Salmon"
   fi
 }
@@ -317,13 +331,21 @@ install_node_lts_with_nvm() {
     return 0
   fi
 
+  if command -v node >/dev/null 2>&1; then
+    log "Node.js already installed; skipping nvm-managed Node install."
+    return 0
+  fi
+
+  set +u
   if ! nvm install --lts; then
+    set -u
     warn "Failed to install Node.js LTS with nvm"
     return 0
   fi
 
   nvm alias default 'lts/*' || true
   nvm use --lts || true
+  set -u
 }
 
 install_tailscale_deb() {
@@ -504,12 +526,26 @@ copy_wallpapers_to() {
 
 rewrite_plasma_paths() {
   local file="$1"
+  local repo_wallpaper_base="$SCRIPT_DIR/configs/plasma/wallpapers"
+  local home_wallpaper_base="$HOME"
 
   [ -f "$file" ] || return 0
 
   sed -E -i \
+    -e "s#${repo_wallpaper_base}/#${home_wallpaper_base}/#g" \
     -e "s#/home/[^/]+/Pictures/Wallpapers/#$HOME/Pictures/Wallpapers/#g" \
     -e "s#/home/[^/]+/\\.local/share/wallpapers/#$HOME/.local/share/wallpapers/#g" \
+    "$file"
+}
+
+normalize_plasma_wallpaper_paths() {
+  local file="$1"
+
+  [ -f "$file" ] || return 0
+
+  sed -E -i \
+    -e "s#${HOME}/Pictures/Wallpapers/Pictures/Wallpapers/#${HOME}/Pictures/Wallpapers/#g" \
+    -e "s#${HOME}/\\.local/share/wallpapers/\\.local/share/wallpapers/#${HOME}/.local/share/wallpapers/#g" \
     "$file"
 }
 
@@ -526,16 +562,53 @@ warn_missing_wallpapers() {
   done < <(sed -nE 's/^(Image|PreviewImage)(\[[^]]*\])?=//p' "$file" | sort -u)
 }
 
+restore_kde_window_shortcuts() {
+  local file="$HOME/.config/kglobalshortcutsrc"
+
+  [ -f "$file" ] || return 0
+
+  perl -0pi -e '
+    s/^Window Maximize=.*$/Window Maximize=Meta+Up,Meta+PgUp,Maximise Window/m;
+    s/^Window Move Center=.*$/Window Move Center=Meta+Shift+C,,Move Window to the Centre/m;
+  ' "$file"
+}
+
+restart_kde_shortcuts() {
+  local daemon_cmd daemon_name
+
+  for daemon_cmd in kglobalaccel6 kglobalaccel5; do
+    if command -v "$daemon_cmd" >/dev/null 2>&1; then
+      daemon_name="$daemon_cmd"
+      break
+    fi
+  done
+
+  [ -n "${daemon_name:-}" ] || return 0
+
+  if command -v "kquitapp${daemon_name#kglobalaccel}" >/dev/null 2>&1; then
+    "kquitapp${daemon_name#kglobalaccel}" "$daemon_name" || true
+  else
+    pkill -x "$daemon_name" || true
+  fi
+
+  (nohup "$daemon_name" --replace >/dev/null 2>&1 &)
+}
+
 apply_kde_configs() {
-  log "Applying Konsole and Plasma configs from repository..."
+  log "Applying Kitty, Konsole, and Plasma configs from repository..."
+  copy_tree_to "$SCRIPT_DIR/configs/kitty" "$HOME/.config/kitty"
   copy_tree_to "$SCRIPT_DIR/configs/konsole/config" "$HOME/.config"
   copy_tree_to "$SCRIPT_DIR/configs/konsole/profiles" "$HOME/.local/share/konsole"
   copy_tree_to "$SCRIPT_DIR/configs/plasma/config" "$HOME/.config"
   copy_wallpapers_to "$SCRIPT_DIR/configs/plasma/wallpapers" "$HOME/Pictures/Wallpapers"
   rewrite_plasma_paths "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
   rewrite_plasma_paths "$HOME/.config/kscreenlockerrc"
+  normalize_plasma_wallpaper_paths "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  normalize_plasma_wallpaper_paths "$HOME/.config/kscreenlockerrc"
+  restore_kde_window_shortcuts
   warn_missing_wallpapers "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
   warn_missing_wallpapers "$HOME/.config/kscreenlockerrc"
+  restart_kde_shortcuts
 }
 
 restart_plasma_shell() {
@@ -561,7 +634,8 @@ run_arch_install() {
   ensure_cmd curl
 
   log "Updating system packages..."
-  sudo pacman -Syu --noconfirm
+  sudo pacman -Sy --needed --noconfirm archlinux-keyring cachyos-keyring || warn "Keyring refresh failed; continuing."
+  sudo pacman -Syu --noconfirm || warn "System upgrade failed; continuing with existing packages."
 
   if ! command -v git >/dev/null 2>&1; then
     log "git not found; installing git."
@@ -596,6 +670,7 @@ run_arch_install() {
   log "Installing shells and CLI productivity tools..."
   sudo pacman -S --needed --noconfirm \
     zsh \
+    kitty \
     micro \
     neovim \
     vim \
@@ -604,7 +679,6 @@ run_arch_install() {
     btop \
     htop \
     fastfetch \
-    tldr \
     wget \
     unrar \
     unzip
@@ -625,7 +699,6 @@ run_arch_install() {
 
   log "Configuring Git identity..."
   configure_git_identity
-  install_smoked_salmon_config
 
   log "Installing networking and sharing tools..."
   sudo pacman -S --needed --noconfirm qbittorrent
@@ -637,7 +710,7 @@ run_arch_install() {
 
   log "Installing media, streaming, and creative apps..."
   sudo pacman -S --needed --noconfirm mpv
-  yay -S --needed --noconfirm spotify cider
+  yay -S --needed --noconfirm spotify
 
   log "Installing productivity, security, and utilities..."
   sudo pacman -S --needed --noconfirm discord
@@ -754,6 +827,7 @@ run_ubuntu_install() {
   install_nvm_if_needed
   install_javascript_tooling
   install_smoked_salmon
+  install_smoked_salmon_config
 
   log "Ensuring Nerd Font for Powerlevel10k..."
   install_jetbrains_nerd_font
@@ -767,7 +841,6 @@ run_ubuntu_install() {
 
   log "Configuring Git identity..."
   configure_git_identity
-  install_smoked_salmon_config
 
   apply_kde_configs
   install_optional_windows_fonts_ubuntu

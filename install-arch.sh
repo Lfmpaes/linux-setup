@@ -81,12 +81,19 @@ install_smoked_salmon() {
     return 0
   fi
 
+  echo "Installing Smoked Salmon dependencies..."
+  sudo pacman -S --needed --noconfirm sox flac mp3val lame curl git >/dev/null 2>&1 || echo "Failed to install Smoked Salmon dependencies."
+
   if ! command -v uv >/dev/null 2>&1; then
-    echo "Skipping Smoked Salmon install because uv was not found."
-    return 0
+    echo "uv not found; installing uv for Smoked Salmon..."
+    if ! curl -fsSL https://astral.sh/uv/install.sh | sh >/dev/null 2>&1; then
+      echo "Failed to install uv."
+      return 0
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
   fi
 
-  if ! uv tool install --force "git+https://github.com/smokin-salmon/smoked-salmon" >/dev/null 2>&1; then
+  if ! uv tool install git+https://github.com/smokin-salmon/smoked-salmon >/dev/null 2>&1; then
     echo "Failed to install Smoked Salmon."
   fi
 }
@@ -171,12 +178,26 @@ copy_wallpapers_to() {
 
 rewrite_plasma_paths() {
   local file="$1"
+  local repo_wallpaper_base="$SCRIPT_DIR/configs/plasma/wallpapers"
+  local home_wallpaper_base="$HOME"
 
   [ -f "$file" ] || return 0
 
   sed -E -i \
+    -e "s#${repo_wallpaper_base}/#${home_wallpaper_base}/#g" \
     -e "s#/home/[^/]+/Pictures/Wallpapers/#$HOME/Pictures/Wallpapers/#g" \
     -e "s#/home/[^/]+/\\.local/share/wallpapers/#$HOME/.local/share/wallpapers/#g" \
+    "$file"
+}
+
+normalize_plasma_wallpaper_paths() {
+  local file="$1"
+
+  [ -f "$file" ] || return 0
+
+  sed -E -i \
+    -e "s#${HOME}/Pictures/Wallpapers/Pictures/Wallpapers/#${HOME}/Pictures/Wallpapers/#g" \
+    -e "s#${HOME}/\\.local/share/wallpapers/\\.local/share/wallpapers/#${HOME}/.local/share/wallpapers/#g" \
     "$file"
 }
 
@@ -193,9 +214,42 @@ warn_missing_wallpapers() {
   done < <(sed -nE 's/^(Image|PreviewImage)(\[[^]]*\])?=//p' "$file" | sort -u)
 }
 
+restore_kde_window_shortcuts() {
+  local file="$HOME/.config/kglobalshortcutsrc"
+
+  [ -f "$file" ] || return 0
+
+  perl -0pi -e '
+    s/^Window Maximize=.*$/Window Maximize=Meta+Up,Meta+PgUp,Maximise Window/m;
+    s/^Window Move Center=.*$/Window Move Center=Meta+Shift+C,,Move Window to the Centre/m;
+  ' "$file"
+}
+
+restart_kde_shortcuts() {
+  local daemon_cmd daemon_name
+
+  for daemon_cmd in kglobalaccel6 kglobalaccel5; do
+    if command -v "$daemon_cmd" >/dev/null 2>&1; then
+      daemon_name="$daemon_cmd"
+      break
+    fi
+  done
+
+  [ -n "${daemon_name:-}" ] || return 0
+
+  if command -v "kquitapp${daemon_name#kglobalaccel}" >/dev/null 2>&1; then
+    "kquitapp${daemon_name#kglobalaccel}" "$daemon_name" || true
+  else
+    pkill -x "$daemon_name" || true
+  fi
+
+  (nohup "$daemon_name" --replace >/dev/null 2>&1 &)
+}
+
 # Update system packages quietly to ensure latest base
 echo "Updating system packages..."
-sudo pacman -Syu --noconfirm >/dev/null 2>&1
+sudo pacman -Sy --needed --noconfirm archlinux-keyring cachyos-keyring >/dev/null 2>&1 || echo "Warning: keyring refresh failed; continuing."
+sudo pacman -Syu --noconfirm >/dev/null 2>&1 || echo "Warning: system upgrade failed; continuing."
 
 # Ensure git is available for AUR operations
 if ! command -v git >/dev/null 2>&1; then
@@ -236,6 +290,7 @@ sudo pacman -S --needed --noconfirm cronie flatpak docker tailscale >/dev/null 2
 echo "Installing Shells & CLI Productivity..."
 sudo pacman -S --needed --noconfirm \
   zsh \
+  kitty \
   micro \
   neovim \
   vim \
@@ -244,7 +299,6 @@ sudo pacman -S --needed --noconfirm \
   btop \
   htop \
   fastfetch \
-  tldr \
   wget \
   unrar \
   unzip >/dev/null 2>&1
@@ -263,12 +317,12 @@ yay -S --needed --noconfirm visual-studio-code-bin cursor-bin >/dev/null 2>&1
 
 install_javascript_tooling
 install_smoked_salmon
+install_smoked_salmon_config
 
 # Configure global Git identity
 echo "Configuring Git identity..."
 git config --global user.name "Luiz Fernando M. Paes"
 git config --global user.email "luiz@lfmpaes.com.br"
-install_smoked_salmon_config
 
 # Install Networking & Sharing
 echo "Installing Networking & Sharing..."
@@ -284,7 +338,7 @@ configure_google_chrome_launchers
 # Install Media, Streaming & Creative Apps
 echo "Installing Media, Streaming & Creative Apps..."
 sudo pacman -S --needed --noconfirm gimp mpv spotify-player >/dev/null 2>&1
-yay -S --needed --noconfirm spotify cider >/dev/null 2>&1
+yay -S --needed --noconfirm spotify >/dev/null 2>&1
 
 # Install Productivity, Security & Utilities
 echo "Installing Productivity, Security & Utilities..."
@@ -324,8 +378,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 install -Dm644 "$SCRIPT_DIR/configs/zsh/.zshrc" "$HOME/.zshrc"
 install -Dm644 "$SCRIPT_DIR/configs/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 
-# Configure Konsole profiles and settings
-echo "Configuring Konsole settings..."
+# Configure Kitty and Konsole settings
+echo "Configuring Kitty and Konsole settings..."
+if [ -d "$SCRIPT_DIR/configs/kitty" ]; then
+  kitty_config_base="$SCRIPT_DIR/configs/kitty"
+  while IFS= read -r -d '' file; do
+    rel_path="${file#${kitty_config_base}/}"
+    install -Dm644 "$file" "$HOME/.config/kitty/$rel_path"
+  done < <(find "$kitty_config_base" -type f -print0)
+fi
+
 if [ -d "$SCRIPT_DIR/configs/konsole/config" ]; then
   konsole_config_base="$SCRIPT_DIR/configs/konsole/config"
   while IFS= read -r -d '' file; do
@@ -358,8 +420,12 @@ fi
 
 rewrite_plasma_paths "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 rewrite_plasma_paths "$HOME/.config/kscreenlockerrc"
+normalize_plasma_wallpaper_paths "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+normalize_plasma_wallpaper_paths "$HOME/.config/kscreenlockerrc"
+restore_kde_window_shortcuts
 warn_missing_wallpapers "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 warn_missing_wallpapers "$HOME/.config/kscreenlockerrc"
+restart_kde_shortcuts
 
 install_optional_windows_fonts
 

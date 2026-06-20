@@ -135,4 +135,6 @@ export PATH="$HOME/.local/bin:$PATH"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+
+# Homebrew
+eval "$(/home/lfmpaes/.linuxbrew/bin/brew shellenv)"

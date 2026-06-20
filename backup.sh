@@ -21,6 +21,24 @@ declare -A FILE_BACKUPS=(
   ["$HOME/.config/kglobalshortcutsrc"]="$SCRIPT_DIR/configs/plasma/config/kglobalshortcutsrc"
 )
 
+copy_tree_backup() {
+  local src_base="$1"
+  local dest_base="$2"
+  local file rel_path
+
+  if [[ ! -d "$src_base" ]]; then
+    warn_missing "$src_base"
+    return 0
+  fi
+
+  while IFS= read -r -d '' file; do
+    rel_path="${file#${src_base}/}"
+    mkdir -p "$(dirname "$dest_base/$rel_path")"
+    cp -f "$file" "$dest_base/$rel_path"
+    log "Saved ${dest_base#$SCRIPT_DIR/}/$rel_path"
+  done < <(find "$src_base" -type f -print0 | sort -z)
+}
+
 log() {
   printf '%s\n' "$1"
 }
@@ -40,6 +58,8 @@ for src in "${!FILE_BACKUPS[@]}"; do
     warn_missing "$src"
   fi
 done
+
+copy_tree_backup "$HOME/.config/kitty" "$SCRIPT_DIR/configs/kitty"
 
 WALLPAPER_DEST_BASE="$SCRIPT_DIR/configs/plasma/wallpapers"
 declare -A COPIED_WALLPAPERS=()

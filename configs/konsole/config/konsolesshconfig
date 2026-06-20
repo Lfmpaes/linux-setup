@@ -1,2 +1,12 @@
 [Global plugin config]
 manageProfile=false
+
+[SSH Config][bluebox]
+hostname=136.248.127.252
+identifier=bluebox
+importedFromSshConfig=true
+port=
+profileName=
+sshkey=/home/lfmpaes/ssh/ssh-key-2026-05-28.key
+useSshConfig=true
+username=ubuntu
