@@ -600,6 +600,7 @@ apply_kde_configs() {
   copy_tree_to "$SCRIPT_DIR/configs/konsole/config" "$HOME/.config"
   copy_tree_to "$SCRIPT_DIR/configs/konsole/profiles" "$HOME/.local/share/konsole"
   copy_tree_to "$SCRIPT_DIR/configs/plasma/config" "$HOME/.config"
+  copy_tree_to "$SCRIPT_DIR/configs/plasma/kscreen" "$HOME/.local/share/kscreen"
   copy_wallpapers_to "$SCRIPT_DIR/configs/plasma/wallpapers" "$HOME/Pictures/Wallpapers"
   rewrite_plasma_paths "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
   rewrite_plasma_paths "$HOME/.config/kscreenlockerrc"

@@ -414,6 +414,14 @@ if [ -d "$SCRIPT_DIR/configs/plasma/config" ]; then
   done < <(find "$plasma_config_base" -type f -print0)
 fi
 
+if [ -d "$SCRIPT_DIR/configs/plasma/kscreen" ]; then
+  plasma_kscreen_base="$SCRIPT_DIR/configs/plasma/kscreen"
+  while IFS= read -r -d '' file; do
+    rel_path="${file#${plasma_kscreen_base}/}"
+    install -Dm644 "$file" "$HOME/.local/share/kscreen/$rel_path"
+  done < <(find "$plasma_kscreen_base" -type f -print0)
+fi
+
 if [ -d "$SCRIPT_DIR/configs/plasma/wallpapers" ]; then
   copy_wallpapers_to "$SCRIPT_DIR/configs/plasma/wallpapers" "$HOME/Pictures/Wallpapers"
 fi

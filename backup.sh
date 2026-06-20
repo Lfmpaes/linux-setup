@@ -60,6 +60,7 @@ for src in "${!FILE_BACKUPS[@]}"; do
 done
 
 copy_tree_backup "$HOME/.config/kitty" "$SCRIPT_DIR/configs/kitty"
+copy_tree_backup "$HOME/.local/share/kscreen" "$SCRIPT_DIR/configs/plasma/kscreen"
 
 WALLPAPER_DEST_BASE="$SCRIPT_DIR/configs/plasma/wallpapers"
 declare -A COPIED_WALLPAPERS=()

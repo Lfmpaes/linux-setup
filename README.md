@@ -59,6 +59,7 @@ Backs up user config files from `$HOME` into the repository under `configs/`.
 
 What it does:
 - Copies Zsh, Kitty, Konsole, and Plasma config files into this repo
+- Copies KDE display layout state from `~/.local/share/kscreen`
 - Parses Plasma wallpaper entries and copies referenced wallpapers into `configs/plasma/wallpapers/`
 - Warns for files that are missing and continues
 
