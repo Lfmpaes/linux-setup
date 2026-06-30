@@ -14,6 +14,7 @@ source "$ZSH/oh-my-zsh.sh"
 alias ls="eza --icons=always"
 alias files="yazi"
 alias cu="cachy-update"
+alias sr="sudo systemctl soft-reboot"
 
 source "$HOME/powerlevel10k/powerlevel10k.zsh-theme"
 
@@ -33,3 +34,12 @@ eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
 # SDKMAN must stay at the end of the file.
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# pnpm
+export PNPM_HOME="/home/lfmpaes/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
+export PATH="$HOME/bin:$PATH"

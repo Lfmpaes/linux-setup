@@ -260,7 +260,7 @@ Window Pack Down=none,none,Move Window Down
 Window Pack Left=none,none,Move Window Left
 Window Pack Right=none,none,Move Window Right
 Window Pack Up=none,none,Move Window Up
-Window Quick Tile Bottom=Meta+Down,Meta+Down,Quick Tile Window to the Bottom
+Window Quick Tile Bottom=none,Meta+Down,Quick Tile Window to the Bottom
 Window Quick Tile Bottom Left=none,none,Quick Tile Window to the Bottom Left
 Window Quick Tile Bottom Right=none,none,Quick Tile Window to the Bottom Right
 Window Quick Tile Left=Meta+Left,Meta+Left,Quick Tile Window to the Left
@@ -270,7 +270,7 @@ Window Quick Tile Top Left=none,none,Quick Tile Window to the Top Left
 Window Quick Tile Top Right=none,none,Quick Tile Window to the Top Right
 Window Raise=none,none,Raise Window
 Window Resize=none,none,Resize Window
-Window Restore=Meta+Backspace,Meta+Backspace,Restore Window
+Window Restore=Meta+Down,Meta+Backspace,Restore Window
 Window Shade=none,none,Shade Window
 Window Shrink Horizontal=none,none,Shrink Window Horizontally
 Window Shrink Vertical=none,none,Shrink Window Vertically
@@ -386,10 +386,6 @@ _launch=none
 
 [services][net.local.kitty.desktop]
 _launch=Meta+T
-
-[services][org.kde.spectacle.desktop]
-CurrentMonitorScreenShot=none
-OpenWithoutScreenshot=none
 
 [wacomtablet]
 Map to fullscreen=Meta+Ctrl+F,Meta+Ctrl+F,Map to fullscreen

@@ -64,7 +64,7 @@ DialogHeight=540
 DialogWidth=720
 
 [Containments][2][Applets][5][Configuration][General]
-launchers=applications:google-chrome.desktop,preferred://filemanager
+launchers=applications:google-chrome.desktop,preferred://filemanager,applications:kitty.desktop
 
 [Containments][2][Applets][7]
 activityId=

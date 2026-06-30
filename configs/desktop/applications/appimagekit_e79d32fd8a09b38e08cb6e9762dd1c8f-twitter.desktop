@@ -1,0 +1,26 @@
+[Desktop Entry]
+Actions=AppImageLauncher-Remove-AppImage;
+Categories=
+Comment=
+Exec=/home/lfmpaes/Applications/twitter_6435a525ea8cb7c54bb2ea31cf1f5e24.AppImage
+Icon=appimagekit_e79d32fd8a09b38e08cb6e9762dd1c8f_pake-twitter
+Name=Twitter
+NoDisplay=false
+Path=
+PrefersNonDefaultGPU=false
+StartupNotify=true
+StartupWMClass=pake-twitter
+Terminal=false
+TerminalOptions=
+TryExec=/home/lfmpaes/Applications/twitter_6435a525ea8cb7c54bb2ea31cf1f5e24.AppImage
+Type=Application
+X-AppImage-Identifier=e79d32fd8a09b38e08cb6e9762dd1c8f
+X-AppImage-Old-Icon=pake-twitter
+X-AppImageLauncher-Version=3.0.0-beta-2 (git commit release/tag), built on 2026-06-21 18:14:50 UTC
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+
+[Desktop Action AppImageLauncher-Remove-AppImage]
+Exec=/usr/lib/appimagelauncher/remove "/home/lfmpaes/Applications/twitter_6435a525ea8cb7c54bb2ea31cf1f5e24.AppImage"
+Icon=AppImageLauncher
+Name=Delete this AppImage

@@ -1,0 +1,12 @@
+[Unit]
+Description=Run linux-setup backup and push changes on startup
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@REPO_DIR@
+ExecStart=@REPO_DIR@/auto-backup.sh
+
+[Install]
+WantedBy=default.target
