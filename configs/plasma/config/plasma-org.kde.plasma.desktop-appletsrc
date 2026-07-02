@@ -64,7 +64,7 @@ DialogHeight=540
 DialogWidth=720
 
 [Containments][2][Applets][5][Configuration][General]
-launchers=applications:google-chrome.desktop,preferred://filemanager,applications:kitty.desktop
+launchers=preferred://filemanager,applications:kitty.desktop
 
 [Containments][2][Applets][7]
 activityId=
@@ -158,7 +158,7 @@ DialogWidth=720
 
 [Containments][2][Applets][7][General]
 extraItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasma.devicenotifier,org.kde.plasma.manage-inputmethod,org.kde.plasma.notifications,org.kde.plasma.keyboardindicator,org.kde.plasma.weather,org.kde.plasma.brightness,org.kde.plasma.keyboardlayout,org.kde.plasma.networkmanagement,org.kde.plasma.mediacontroller,org.kde.kscreen,org.kde.plasma.volume,org.kde.plasma.battery,org.kde.kdeconnect,org.kde.plasma.clipboard
-hiddenItems=chrome_status_icon_1,org.kde.plasma.clipboard
+hiddenItems=org.kde.plasma.clipboard
 knownItems=org.kde.plasma.bluetooth,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.manage-inputmethod,org.kde.plasma.notifications,org.kde.plasma.keyboardindicator,org.kde.plasma.weather,org.kde.plasma.battery,org.kde.plasma.brightness,org.kde.plasma.keyboardlayout,org.kde.plasma.networkmanagement,org.kde.plasma.mediacontroller,org.kde.kscreen,org.kde.plasma.volume,org.kde.kdeconnect
 shownItems=org.kde.plasma.battery
 

@@ -43,7 +43,6 @@
 - jdownloader2 [AUR]
 
 ## Browsers & Web Clients
-- google-chrome [AUR]
 - zen-browser-bin [AUR]
 
 ## Media, Streaming & Creative Apps

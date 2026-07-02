@@ -201,23 +201,6 @@ install_flatpak() {
   fi
 }
 
-install_google_chrome_deb() {
-  if command -v google-chrome >/dev/null 2>&1; then
-    return 0
-  fi
-
-  local tmp_deb
-  tmp_deb="$(mktemp --suffix=.deb)"
-
-  if wget -qO "$tmp_deb" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"; then
-    sudo dpkg -i "$tmp_deb" || sudo apt-get install -fy
-  else
-    warn "Failed to download Google Chrome .deb"
-  fi
-
-  rm -f "$tmp_deb"
-}
-
 install_1password_deb() {
   if command -v 1password >/dev/null 2>&1 || command -v op >/dev/null 2>&1; then
     return 0
@@ -243,6 +226,21 @@ install_1password_deb() {
     install_apt_packages 1password
   else
     warn "Failed to configure 1Password repository"
+  fi
+}
+
+configure_1password_allowed_browsers() {
+  local allowed_browsers_file
+
+  allowed_browsers_file="/etc/1password/custom_allowed_browsers"
+
+  if ! sudo install -d -m 0755 /etc/1password; then
+    warn "Failed to create /etc/1password"
+    return 0
+  fi
+
+  if ! printf 'zen-bin\n' | sudo tee "$allowed_browsers_file" >/dev/null; then
+    warn "Failed to write $allowed_browsers_file"
   fi
 }
 
@@ -398,31 +396,6 @@ install_jetbrains_nerd_font() {
 
   rm -rf "$tmp_dir"
   fc-cache -f "$font_dir" || warn "Failed to refresh font cache for $font_dir"
-}
-
-configure_google_chrome_launchers() {
-  local chrome_flags desktop_id source target
-
-  chrome_flags="--disable-features=ExtensionManifestV2Unsupported,ExtensionManifestV2Disabled --password-store=basic"
-
-  mkdir -p "$HOME/.local/share/applications"
-
-  for desktop_id in google-chrome.desktop com.google.Chrome.desktop; do
-    source="/usr/share/applications/$desktop_id"
-    target="$HOME/.local/share/applications/$desktop_id"
-
-    if [ ! -f "$source" ]; then
-      warn "Skipping Chrome launcher override for $desktop_id; source desktop file not found"
-      continue
-    fi
-
-    install -Dm644 "$source" "$target"
-    sed -i \
-      -e "s#^Exec=/usr/bin/google-chrome-stable %U#Exec=/usr/bin/google-chrome-stable ${chrome_flags} %U#" \
-      -e "s#^Exec=/usr/bin/google-chrome-stable\$#Exec=/usr/bin/google-chrome-stable ${chrome_flags}#" \
-      -e "s#^Exec=/usr/bin/google-chrome-stable --incognito#Exec=/usr/bin/google-chrome-stable ${chrome_flags} --incognito#" \
-      "$target"
-  done
 }
 
 install_optional_windows_fonts_arch() {
@@ -605,6 +578,85 @@ restart_kde_shortcuts() {
   (nohup "$daemon_name" --replace >/dev/null 2>&1 &)
 }
 
+detect_zen_browser_desktop_id() {
+  local desktop_id
+
+  for desktop_id in \
+    app.zen_browser.zen.desktop \
+    zen-browser.desktop \
+    zen.desktop
+  do
+    if [ -f "$HOME/.local/share/applications/$desktop_id" ] || \
+      [ -f "$HOME/.local/share/flatpak/exports/share/applications/$desktop_id" ] || \
+      [ -f "/var/lib/flatpak/exports/share/applications/$desktop_id" ] || \
+      [ -f "/usr/share/applications/$desktop_id" ]; then
+      printf '%s\n' "$desktop_id"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+configure_default_browser() {
+  local browser_desktop_id kdeglobals_file plasma_file mimeapps_file
+
+  browser_desktop_id="$(detect_zen_browser_desktop_id || true)"
+  if [ -z "$browser_desktop_id" ]; then
+    warn "Zen Browser desktop entry not found; skipping default browser configuration"
+    return 0
+  fi
+
+  kdeglobals_file="$HOME/.config/kdeglobals"
+  plasma_file="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  mimeapps_file="$HOME/.local/share/applications/mimeapps.list"
+
+  rm -f \
+    "$HOME/.local/share/applications/google-chrome.desktop" \
+    "$HOME/.local/share/applications/com.google.Chrome.desktop"
+
+  if [ -f "$kdeglobals_file" ]; then
+    sed -i "s/^BrowserApplication=.*/BrowserApplication=$browser_desktop_id/" "$kdeglobals_file"
+  fi
+
+  if [ -f "$plasma_file" ]; then
+    sed -i \
+      -e "s#^launchers=.*#launchers=applications:${browser_desktop_id},preferred://filemanager,applications:kitty.desktop#" \
+      -e 's/^hiddenItems=chrome_status_icon_1,org\.kde\.plasma\.clipboard$/hiddenItems=org.kde.plasma.clipboard/' \
+      "$plasma_file"
+  fi
+
+  mkdir -p "$(dirname "$mimeapps_file")"
+  cat >"$mimeapps_file" <<EOF
+[Default Applications]
+application/xhtml+xml=$browser_desktop_id
+text/html=$browser_desktop_id
+x-scheme-handler/about=$browser_desktop_id
+x-scheme-handler/http=$browser_desktop_id
+x-scheme-handler/https=$browser_desktop_id
+x-scheme-handler/unknown=$browser_desktop_id
+
+[Added Associations]
+application/xhtml+xml=$browser_desktop_id;
+text/html=$browser_desktop_id;
+x-scheme-handler/about=$browser_desktop_id;
+x-scheme-handler/http=$browser_desktop_id;
+x-scheme-handler/https=$browser_desktop_id;
+x-scheme-handler/unknown=$browser_desktop_id;
+EOF
+
+  if command -v xdg-settings >/dev/null 2>&1; then
+    xdg-settings set default-web-browser "$browser_desktop_id" || warn "Failed to set default browser with xdg-settings"
+  fi
+
+  if command -v xdg-mime >/dev/null 2>&1; then
+    xdg-mime default "$browser_desktop_id" x-scheme-handler/http || warn "Failed to set HTTP handler with xdg-mime"
+    xdg-mime default "$browser_desktop_id" x-scheme-handler/https || warn "Failed to set HTTPS handler with xdg-mime"
+    xdg-mime default "$browser_desktop_id" text/html || warn "Failed to set HTML handler with xdg-mime"
+    xdg-mime default "$browser_desktop_id" application/xhtml+xml || warn "Failed to set XHTML handler with xdg-mime"
+  fi
+}
+
 apply_kde_configs() {
   log "Applying shell, editor, desktop, and Plasma configs from repository..."
   [ ! -f "$SCRIPT_DIR/configs/bash/.bashrc" ] || install -Dm644 "$SCRIPT_DIR/configs/bash/.bashrc" "$HOME/.bashrc"
@@ -629,6 +681,7 @@ apply_kde_configs() {
   warn_missing_wallpapers "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
   warn_missing_wallpapers "$HOME/.config/kscreenlockerrc"
   restart_kde_shortcuts
+  configure_default_browser
 }
 
 restart_plasma_shell() {
@@ -725,8 +778,7 @@ run_arch_install() {
   yay -S --needed --noconfirm localsend-bin jdownloader2
 
   log "Installing browsers and web clients..."
-  yay -S --needed --noconfirm google-chrome zen-browser-bin
-  configure_google_chrome_launchers
+  yay -S --needed --noconfirm zen-browser-bin
 
   log "Installing media, streaming, and creative apps..."
   sudo pacman -S --needed --noconfirm mpv
@@ -735,6 +787,7 @@ run_arch_install() {
   log "Installing productivity, security, and utilities..."
   sudo pacman -S --needed --noconfirm discord
   yay -S --needed --noconfirm 1password
+  configure_1password_allowed_browsers
 
   log "Installing gaming packages..."
   sudo pacman -S --needed --noconfirm steam
@@ -840,9 +893,8 @@ run_ubuntu_install() {
   install_flatpak sh.cider.Cider
 
   log "Installing vendor packages..."
-  install_google_chrome_deb
-  configure_google_chrome_launchers
   install_1password_deb
+  configure_1password_allowed_browsers
   install_tailscale_deb
   install_nvm_if_needed
   install_javascript_tooling

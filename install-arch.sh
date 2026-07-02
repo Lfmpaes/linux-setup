@@ -114,33 +114,19 @@ configure_tailscale_systray() {
     echo "Failed to enable/start tailscale-systray user service."
 }
 
-configure_google_chrome_launchers() {
-  local chrome_flags target source
-  local desktop_ids=(
-    google-chrome.desktop
-    com.google.Chrome.desktop
-  )
+configure_1password_allowed_browsers() {
+  local allowed_browsers_file
 
-  chrome_flags="--disable-features=ExtensionManifestV2Unsupported,ExtensionManifestV2Disabled --password-store=basic"
+  allowed_browsers_file="/etc/1password/custom_allowed_browsers"
 
-  mkdir -p "$HOME/.local/share/applications"
+  if ! sudo install -d -m 0755 /etc/1password >/dev/null 2>&1; then
+    echo "Failed to create /etc/1password."
+    return 0
+  fi
 
-  for target in "${desktop_ids[@]}"; do
-    source="/usr/share/applications/$target"
-    target="$HOME/.local/share/applications/$target"
-
-    if [ ! -f "$source" ]; then
-      echo "Skipping Chrome launcher override for $(basename "$target"); source desktop file not found."
-      continue
-    fi
-
-    install -Dm644 "$source" "$target"
-    sed -i \
-      -e "s#^Exec=/usr/bin/google-chrome-stable %U#Exec=/usr/bin/google-chrome-stable ${chrome_flags} %U#" \
-      -e "s#^Exec=/usr/bin/google-chrome-stable\$#Exec=/usr/bin/google-chrome-stable ${chrome_flags}#" \
-      -e "s#^Exec=/usr/bin/google-chrome-stable --incognito#Exec=/usr/bin/google-chrome-stable ${chrome_flags} --incognito#" \
-      "$target"
-  done
+  if ! printf 'zen-bin\n' | sudo tee "$allowed_browsers_file" >/dev/null; then
+    echo "Failed to write $allowed_browsers_file."
+  fi
 }
 
 install_optional_windows_fonts() {
@@ -246,6 +232,85 @@ restart_kde_shortcuts() {
   (nohup "$daemon_name" --replace >/dev/null 2>&1 &)
 }
 
+detect_zen_browser_desktop_id() {
+  local desktop_id
+
+  for desktop_id in \
+    app.zen_browser.zen.desktop \
+    zen-browser.desktop \
+    zen.desktop
+  do
+    if [ -f "$HOME/.local/share/applications/$desktop_id" ] || \
+      [ -f "$HOME/.local/share/flatpak/exports/share/applications/$desktop_id" ] || \
+      [ -f "/var/lib/flatpak/exports/share/applications/$desktop_id" ] || \
+      [ -f "/usr/share/applications/$desktop_id" ]; then
+      printf '%s\n' "$desktop_id"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+configure_default_browser() {
+  local browser_desktop_id kdeglobals_file plasma_file mimeapps_file
+
+  browser_desktop_id="$(detect_zen_browser_desktop_id || true)"
+  if [ -z "$browser_desktop_id" ]; then
+    echo "Zen Browser desktop entry not found; skipping default browser configuration."
+    return 0
+  fi
+
+  kdeglobals_file="$HOME/.config/kdeglobals"
+  plasma_file="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  mimeapps_file="$HOME/.local/share/applications/mimeapps.list"
+
+  rm -f \
+    "$HOME/.local/share/applications/google-chrome.desktop" \
+    "$HOME/.local/share/applications/com.google.Chrome.desktop"
+
+  if [ -f "$kdeglobals_file" ]; then
+    sed -i "s/^BrowserApplication=.*/BrowserApplication=$browser_desktop_id/" "$kdeglobals_file"
+  fi
+
+  if [ -f "$plasma_file" ]; then
+    sed -i \
+      -e "s#^launchers=.*#launchers=applications:${browser_desktop_id},preferred://filemanager,applications:kitty.desktop#" \
+      -e 's/^hiddenItems=chrome_status_icon_1,org\.kde\.plasma\.clipboard$/hiddenItems=org.kde.plasma.clipboard/' \
+      "$plasma_file"
+  fi
+
+  mkdir -p "$(dirname "$mimeapps_file")"
+  cat >"$mimeapps_file" <<EOF
+[Default Applications]
+application/xhtml+xml=$browser_desktop_id
+text/html=$browser_desktop_id
+x-scheme-handler/about=$browser_desktop_id
+x-scheme-handler/http=$browser_desktop_id
+x-scheme-handler/https=$browser_desktop_id
+x-scheme-handler/unknown=$browser_desktop_id
+
+[Added Associations]
+application/xhtml+xml=$browser_desktop_id;
+text/html=$browser_desktop_id;
+x-scheme-handler/about=$browser_desktop_id;
+x-scheme-handler/http=$browser_desktop_id;
+x-scheme-handler/https=$browser_desktop_id;
+x-scheme-handler/unknown=$browser_desktop_id;
+EOF
+
+  if command -v xdg-settings >/dev/null 2>&1; then
+    xdg-settings set default-web-browser "$browser_desktop_id" || echo "Failed to set default browser with xdg-settings."
+  fi
+
+  if command -v xdg-mime >/dev/null 2>&1; then
+    xdg-mime default "$browser_desktop_id" x-scheme-handler/http || echo "Failed to set HTTP handler with xdg-mime."
+    xdg-mime default "$browser_desktop_id" x-scheme-handler/https || echo "Failed to set HTTPS handler with xdg-mime."
+    xdg-mime default "$browser_desktop_id" text/html || echo "Failed to set HTML handler with xdg-mime."
+    xdg-mime default "$browser_desktop_id" application/xhtml+xml || echo "Failed to set XHTML handler with xdg-mime."
+  fi
+}
+
 # Update system packages quietly to ensure latest base
 echo "Updating system packages..."
 sudo pacman -Sy --needed --noconfirm archlinux-keyring cachyos-keyring >/dev/null 2>&1 || echo "Warning: keyring refresh failed; continuing."
@@ -331,9 +396,7 @@ yay -S --needed --noconfirm localsend-bin jdownloader2 >/dev/null 2>&1
 
 # Install Browsers & Web Clients
 echo "Installing Browsers & Web Clients..."
-yay -S --needed --noconfirm google-chrome zen-browser-bin >/dev/null 2>&1
-echo "Configuring Google Chrome launchers..."
-configure_google_chrome_launchers
+yay -S --needed --noconfirm zen-browser-bin >/dev/null 2>&1
 
 # Install Media, Streaming & Creative Apps
 echo "Installing Media, Streaming & Creative Apps..."
@@ -344,6 +407,7 @@ yay -S --needed --noconfirm spotify >/dev/null 2>&1
 echo "Installing Productivity, Security & Utilities..."
 sudo pacman -S --needed --noconfirm discord >/dev/null 2>&1
 yay -S --needed --noconfirm 1password >/dev/null 2>&1
+configure_1password_allowed_browsers
 
 # Install Gaming packages
 echo "Installing Gaming packages..."
@@ -434,6 +498,7 @@ restore_kde_window_shortcuts
 warn_missing_wallpapers "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 warn_missing_wallpapers "$HOME/.config/kscreenlockerrc"
 restart_kde_shortcuts
+configure_default_browser
 
 install_optional_windows_fonts
 

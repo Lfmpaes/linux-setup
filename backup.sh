@@ -32,6 +32,42 @@ declare -A FILE_BACKUPS=(
   ["$HOME/.config/micro/bindings.json"]="$SCRIPT_DIR/configs/micro/bindings.json"
 )
 
+declare -A ALLOWED_APPLICATION_BACKUPS=(
+  ["Paralives.desktop"]=1
+  ["appimagekit_e79d32fd8a09b38e08cb6e9762dd1c8f-twitter.desktop"]=1
+  ["hermes-desktop.desktop"]=1
+  ["mimeapps.list"]=1
+  ["net.local.kitty.desktop"]=1
+)
+
+should_copy_backup_file() {
+  local path="$1"
+  local base_name
+
+  base_name="$(basename "$path")"
+
+  if [[ "$path" == "$HOME/.local/share/applications/"* ]]; then
+    [[ -n "${ALLOWED_APPLICATION_BACKUPS[$base_name]:-}" ]]
+    return
+  fi
+
+  return 0
+}
+
+prune_untracked_application_backups() {
+  local app_dir="$SCRIPT_DIR/configs/desktop/applications"
+  local file base_name
+
+  [[ -d "$app_dir" ]] || return 0
+
+  while IFS= read -r -d '' file; do
+    base_name="$(basename "$file")"
+    if [[ -z "${ALLOWED_APPLICATION_BACKUPS[$base_name]:-}" ]]; then
+      rm -f "$file"
+    fi
+  done < <(find "$app_dir" -maxdepth 1 -type f -print0)
+}
+
 copy_tree_backup() {
   local src_base="$1"
   local dest_base="$2"
@@ -43,6 +79,9 @@ copy_tree_backup() {
   fi
 
   while IFS= read -r -d '' file; do
+    if ! should_copy_backup_file "$file"; then
+      continue
+    fi
     rel_path="${file#${src_base}/}"
     mkdir -p "$(dirname "$dest_base/$rel_path")"
     cp -f "$file" "$dest_base/$rel_path"
@@ -78,6 +117,18 @@ copy_tree_backup "$HOME/.config/autostart" "$SCRIPT_DIR/configs/desktop/autostar
 copy_tree_backup "$HOME/.config/gtk-3.0" "$SCRIPT_DIR/configs/desktop/gtk-3.0"
 copy_tree_backup "$HOME/.config/gtk-4.0" "$SCRIPT_DIR/configs/desktop/gtk-4.0"
 copy_tree_backup "$HOME/.local/share/applications" "$SCRIPT_DIR/configs/desktop/applications"
+prune_untracked_application_backups
+
+if [[ -f "$SCRIPT_DIR/configs/plasma/config/kdeglobals" ]]; then
+  sed -i 's/^BrowserApplication=.*/BrowserApplication=/' "$SCRIPT_DIR/configs/plasma/config/kdeglobals"
+fi
+
+if [[ -f "$SCRIPT_DIR/configs/plasma/config/plasma-org.kde.plasma.desktop-appletsrc" ]]; then
+  sed -i \
+    -e 's#^launchers=.*#launchers=preferred://filemanager,applications:kitty.desktop#' \
+    -e 's/^hiddenItems=.*/hiddenItems=org.kde.plasma.clipboard/' \
+    "$SCRIPT_DIR/configs/plasma/config/plasma-org.kde.plasma.desktop-appletsrc"
+fi
 
 WALLPAPER_DEST_BASE="$SCRIPT_DIR/configs/plasma/wallpapers"
 declare -A COPIED_WALLPAPERS=()
